@@ -86,15 +86,31 @@ function showMatches(items) {
     list.innerHTML = '<div class="empty-state"><div class="empty-ball">⚽</div><h3>Nenhuma partida encontrada</h3><p>Não há jogos para esta região, competição ou data na cobertura atual do fornecedor. Experimente outra data ou região.</p></div>';
     return;
   }
-  list.innerHTML = items.map(match=>{
-    const fixture=match.fixture||{},teams=match.teams||{},goals=match.goals||{},league=match.league||{},status=fixture.status||{};
-    const live=["1H","HT","2H","ET","P","LIVE","BT"].includes(status.short);
-    const score=goals.home==null&&goals.away==null?"–":(goals.home??0)+" : "+(goals.away??0);
-    const time=status.elapsed!=null?status.elapsed+"'":new Intl.DateTimeFormat("pt-BR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"}).format(new Date(fixture.date));
-    return '<article class="match-card"><div class="match-league">'+esc(league.name)+' <span>'+esc(league.country||"")+'</span></div><div class="match-main"><div class="match-team home"><img src="'+esc(teams.home?.logo||"")+'" alt="" onerror="this.style.display=\'none\'"><b>'+esc(teams.home?.name)+'</b></div><div class="match-score"><strong>'+esc(score)+'</strong><small class="'+(live?"live-label":"")+'">'+(live?"AO VIVO":esc(status.long||time))+'</small></div><div class="match-team away"><img src="'+esc(teams.away?.logo||"")+'" alt="" onerror="this.style.display=\'none\'"><b>'+esc(teams.away?.name)+'</b></div></div></article>';
-  }).join("");
-}
 
+  const groups = new Map();
+  items.forEach(match=>{
+    const league=match.league||{};
+    const key=String(league.id??league.name??"sem-liga");
+    if(!groups.has(key)) groups.set(key,{league,matches:[]});
+    groups.get(key).matches.push(match);
+  });
+
+  const viewTitle = view==="live" ? "PARTIDAS EM ANDAMENTO" : view==="tomorrow" ? "AGENDA DE AMANHÃ" : "JOGOS DE HOJE";
+  list.innerHTML = '<div class="match-day-heading"><span class="day-heading-icon">'+(view==="live"?"●":view==="tomorrow"?"◷":"⚽")+'</span><div><b>'+viewTitle+'</b><small>'+items.length+' partida(s) • '+groups.size+' competição(ões)</small></div>'+(view==="live"?'<span class="live-now-badge"><i></i> AO VIVO</span>':'')+'</div>'+
+    [...groups.values()].map(group=>{
+      const league=group.league||{};
+      const logo=league.logo?'<img class="league-logo" src="'+esc(league.logo)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">':'<span class="league-logo-fallback">🏆</span>';
+      return '<section class="league-match-group"><header class="league-group-head">'+logo+'<div class="league-group-name"><b>'+esc(league.name||"Competição")+'</b><small>'+esc(league.country||"Futebol internacional")+'</small></div><span class="league-game-count">'+group.matches.length+' JOGO(S)</span></header><div class="league-group-games">'+group.matches.map(match=>{
+        const fixture=match.fixture||{},teams=match.teams||{},goals=match.goals||{},status=fixture.status||{};
+        const live=["1H","HT","2H","ET","P","LIVE","BT"].includes(status.short);
+        const finished=["FT","AET","PEN"].includes(status.short);
+        const score=goals.home==null&&goals.away==null?"VS":(goals.home??0)+" : "+(goals.away??0);
+        const time=status.elapsed!=null?status.elapsed+"'":new Intl.DateTimeFormat("pt-BR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"}).format(new Date(fixture.date));
+        const state=live?'<span class="game-state live"><i></i> '+(status.elapsed!=null?status.elapsed+"' AO VIVO":"AO VIVO")+'</span>':finished?'<span class="game-state finished">ENCERRADO</span>':'<span class="game-state scheduled">'+esc(status.long||"AGENDADO")+'</span>';
+        return '<article class="match-card '+(live?"is-live":"")+'"><div class="match-kickoff">'+(live?'<span class="live-pulse"></span>':"")+(live?"EM JOGO":finished?"RESULTADO":"INÍCIO")+' <span>'+esc(time)+'</span></div><div class="match-main"><div class="match-team home"><img src="'+esc(teams.home?.logo||"")+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><b>'+esc(teams.home?.name||"Mandante")+'</b></div><div class="match-score"><strong>'+esc(score)+'</strong>'+state+'</div><div class="match-team away"><img src="'+esc(teams.away?.logo||"")+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><b>'+esc(teams.away?.name||"Visitante")+'</b></div></div></article>';
+      }).join("")+'</div></section>';
+    }).join("");
+}
 function applyFilters() {
   const visible=currentItems.filter(belongsToRegion);
   if(selectedLeague!=="all"&&!visible.some(match=>String(match.league?.id)===selectedLeague)) selectedLeague="all";
