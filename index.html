@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07111f"><meta name="description" content="Minha Aposta — central informativa de futebol mundial, jogos, resultados e campeonatos.">
+<title>Minha Aposta | Futebol mundial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar">
+<a class="brand" href="#"><span class="brand-mark">M<span>+</span></span><span>MINHA <b>APOSTA</b><small>FUTEBOL • MUNDO</small></span></a>
+<div class="side-label">MENU PRINCIPAL</div>
+<a class="nav-item active" href="#inicio"><span>⌂</span> Visão geral</a>
+<a class="nav-item" href="#partidas"><span>◷</span> Partidas</a>
+<a class="nav-item" href="#ligas"><span>▤</span> Competições</a>
+<a class="nav-item" href="#resultados"><span>▣</span> Resultados</a>
+<div class="side-bottom"><div class="live-dot"></div><span>Central de futebol</span><small>INFORMAÇÃO ESPORTIVA</small></div>
+</aside>
+<main class="main-content" id="inicio">
+<header class="topbar"><button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">☰</button><div class="breadcrumb">FUTEBOL <span>/</span> <b>VISÃO GERAL</b></div><div class="top-actions"><span class="date-label" id="today"></span><div class="avatar">MA</div></div></header>
+<section class="hero">
+<div class="hero-copy"><div class="eyebrow"><i></i> SUA CENTRAL DE FUTEBOL</div><h1>O mundo do futebol.<br><em>Em um só lugar.</em></h1><p>Acompanhe partidas, campeonatos e resultados do Brasil e do mundo.</p><a class="hero-button" href="#partidas">Explorar partidas <span>↗</span></a></div>
+<div class="hero-art"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="ball">⚽</div><div class="art-tag tag-top">FUTEBOL GLOBAL</div><div class="art-tag tag-bottom">PAIXÃO QUE CONECTA</div></div>
+</section>
+<section class="stats-grid">
+<article class="stat-card"><div class="stat-icon green">◉</div><div><small>COBERTURA</small><strong>GLOBAL</strong><span>Futebol mundial</span></div></article>
+<article class="stat-card"><div class="stat-icon blue">▤</div><div><small>COMPETIÇÕES</small><strong>VÁRIAS</strong><span>Ligas e torneios</span></div></article>
+<article class="stat-card"><div class="stat-icon orange">◷</div><div><small>ATUALIZAÇÃO</small><strong>AO VIVO*</strong><span>Quando conectado à API</span></div></article>
+</section>
+<section class="section" id="partidas"><div class="section-heading"><div><div class="eyebrow muted">ACOMPANHE DE PERTO</div><h2>Central de partidas</h2></div><span class="pill">DADOS ESPORTIVOS</span></div>
+<div class="toolbar"><div class="filters" id="filters"><button class="filter active" data-filter="all">Todos</button><button class="filter" data-filter="europe">Europa</button><button class="filter" data-filter="south-america">América do Sul</button><button class="filter" data-filter="brazil">Brasil</button></div><div class="search-wrap"><span>⌕</span><input id="search" placeholder="Buscar campeonato..." aria-label="Buscar campeonato"></div></div>
+<div class="empty-state"><div class="empty-ball">⚽</div><h3>Seu próximo jogo começa aqui</h3><p>O painel está pronto. Para exibir partidas, placares e horários reais, falta conectar uma API de dados esportivos.</p><div class="api-note"><span class="pulse"></span> Aguardando conexão com provedor de futebol</div></div>
+</section>
+<section class="section leagues-section" id="ligas"><div class="section-heading"><div><div class="eyebrow muted">FUTEBOL SEM FRONTEIRAS</div><h2>Competições em destaque</h2></div></div>
+<div class="league-grid">
+<div class="league-card"><span class="flag">🏆</span><div><b>UEFA Champions League</b><small>Europa</small></div><span class="arrow">↗</span></div>
+<div class="league-card"><span class="flag">🇬🇧</span><div><b>Premier League</b><small>Inglaterra</small></div><span class="arrow">↗</span></div>
+<div class="league-card"><span class="flag">🇪🇸</span><div><b>La Liga</b><small>Espanha</small></div><span class="arrow">↗</span></div>
+<div class="league-card"><span class="flag">🇮🇹</span><div><b>Serie A</b><small>Itália</small></div><span class="arrow">↗</span></div>
+<div class="league-card"><span class="flag">🇧🇷</span><div><b>Brasileirão</b><small>Brasil</small></div><span class="arrow">↗</span></div>
+<div class="league-card"><span class="flag">🌎</span><div><b>Copa Libertadores</b><small>América do Sul</small></div><span class="arrow">↗</span></div>
+</div>
+</section>
+<section class="section results-section" id="resultados"><div class="section-heading"><div><div class="eyebrow muted">ACOMPANHE A TEMPORADA</div><h2>Resultados e classificação</h2></div></div><div class="result-placeholder"><span>▣</span><div><b>Estatísticas organizadas para você</b><p>Resultados anteriores e tabelas serão exibidos aqui após a conexão dos dados oficiais.</p></div></div></section>
+<footer><a class="footer-brand" href="#">MINHA APOSTA</a><span>Portal informativo de futebol • Não recebe apostas ou pagamentos.</span><span>© <span id="year"></span> Minha Aposta</span></footer>
+</main>
+</div><script src="app.js"></script></body></html>
