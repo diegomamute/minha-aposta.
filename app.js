@@ -1,17 +1,157 @@
-const API_URL = "https://wjebszolbtlxvoxndoke.supabase.co/functions/v1/football-data"; // URL da Edge Function exclusiva da Minha Aposta.
-const today=document.getElementById("today"), now=new Date();
-today.textContent=new Intl.DateTimeFormat("pt-BR",{weekday:"short",day:"2-digit",month:"short",year:"numeric"}).format(now).toUpperCase();
-document.getElementById("year").textContent=now.getFullYear();
-const sidebar=document.querySelector(".sidebar");
+const API_URL = "https://wjebszolbtlxvoxndoke.supabase.co/functions/v1/football-data";
+const today = document.getElementById("today");
+const now = new Date();
+today.textContent = new Intl.DateTimeFormat("pt-BR",{weekday:"short",day:"2-digit",month:"short",year:"numeric"}).format(now).toUpperCase();
+document.getElementById("year").textContent = now.getFullYear();
+
+const sidebar = document.querySelector(".sidebar");
 document.getElementById("menuToggle").addEventListener("click",()=>sidebar.classList.toggle("open"));
 document.querySelectorAll(".nav-item").forEach(a=>a.addEventListener("click",()=>sidebar.classList.remove("open")));
-document.getElementById("search").addEventListener("input",e=>{const t=e.target.value.trim().toLocaleLowerCase("pt-BR");document.querySelectorAll(".league-card").forEach(c=>c.style.display=c.textContent.toLocaleLowerCase("pt-BR").includes(t)?"flex":"none")});
-const list=document.getElementById("matchList"), statusText=document.getElementById("dataStatus");let view="today",cache={};
-const dateFor=n=>{const d=new Date();d.setDate(d.getDate()+n);return new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(d)};
-const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-async function callApi(action,params={}){if(!API_URL)throw Error("O servidor seguro ainda não foi configurado.");const u=new URL(API_URL);u.searchParams.set("action",action);Object.entries(params).forEach(([k,v])=>{if(v!==""&&v!=null)u.searchParams.set(k,v)});const r=await fetch(u,{headers:{Accept:"application/json"}}),j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.error||"Falha ao consultar dados.");return j}
-function showMatches(items){if(!items.length){list.innerHTML='<div class="empty-state"><div class="empty-ball">⚽</div><h3>Nenhuma partida encontrada</h3><p>Não há jogos para este filtro/data na cobertura atual do fornecedor.</p></div>';return}list.innerHTML=items.map(x=>{const f=x.fixture||{},t=x.teams||{},g=x.goals||{},l=x.league||{},s=f.status||{},live=["1H","HT","2H","ET","P","LIVE"].includes(s.short),score=g.home==null&&g.away==null?"–":(g.home??0)+" : "+(g.away??0),time=s.elapsed!=null?s.elapsed+"'":new Intl.DateTimeFormat("pt-BR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"}).format(new Date(f.date));return '<article class="match-card"><div class="match-league">'+esc(l.name)+' <span>'+esc(l.country||"")+'</span></div><div class="match-main"><div class="match-team home"><img src="'+esc(t.home?.logo||"")+'" alt="" onerror="this.style.display=\'none\'"><b>'+esc(t.home?.name)+'</b></div><div class="match-score"><strong>'+esc(score)+'</strong><small class="'+(live?"live-label":"")+'">'+(live?"AO VIVO":esc(s.long||time))+'</small></div><div class="match-team away"><img src="'+esc(t.away?.logo||"")+'" alt="" onerror="this.style.display=\'none\'"><b>'+esc(t.away?.name)+'</b></div></div></article>'}).join("")}
-async function loadMatches(force=false){const offset=view==="tomorrow"?1:0,d=dateFor(offset),k=view+d;if(!force&&cache[k]&&Date.now()-cache[k].time<120000){showMatches(cache[k].items);return}list.innerHTML='<div class="loading-state"><span class="spinner"></span> Buscando partidas...</div>';try{const j=await callApi("fixtures",view==="live"?{live:"all"}:{date:d});let items=j.response||[];if(view==="live")items=items.filter(x=>["1H","HT","2H","ET","P","LIVE"].includes(x.fixture?.status?.short));cache[k]={time:Date.now(),items};showMatches(items);statusText.textContent="Atualizado às "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})+" • Cobertura varia por competição."}catch(e){list.innerHTML='<div class="empty-state"><div class="empty-ball">⚽</div><h3>Dados ainda não conectados</h3><p>'+esc(e.message)+'</p></div>'}}
-document.querySelectorAll("[data-match-view]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll("[data-match-view]").forEach(x=>x.classList.toggle("active",x===b));view=b.dataset.matchView;loadMatches()}));
+
+const list = document.getElementById("matchList");
+const statusText = document.getElementById("dataStatus");
+const searchInput = document.getElementById("search");
+const leagueChips = document.createElement("div");
+leagueChips.id = "leagueChips";
+leagueChips.className = "league-chips";
+document.querySelector(".match-toolbar").insertAdjacentElement("afterend",leagueChips);
+
+let view = "today";
+let region = "all";
+let selectedLeague = "all";
+let query = "";
+let cache = {};
+let currentItems = [];
+
+const southAmericanCountries = new Set(["Brazil","Argentina","Uruguay","Chile","Colombia","Ecuador","Paraguay","Peru","Bolivia","Venezuela"]);
+const europeanCountries = new Set(["England","Scotland","Wales","Northern Ireland","Spain","Italy","France","Germany","Portugal","Netherlands","Belgium","Turkey","Türkiye","Greece","Austria","Switzerland","Denmark","Norway","Sweden","Finland","Poland","Czech Republic","Czechia","Croatia","Serbia","Ukraine","Russia","Romania","Hungary","Ireland","Republic of Ireland","Slovakia","Slovenia","Bulgaria","Cyprus","Iceland","Luxembourg","Israel","Albania","Bosnia","Montenegro","North Macedonia","Moldova","Georgia","Armenia","Azerbaijan","Estonia","Latvia","Lithuania","Kosovo"]);
+const europeanCompetitionIds = new Set([2,3,848,531]); // Champions League, Europa League, Conference League e Supercopa da UEFA
+
+const dateFor = offset => {
+  const d = new Date();
+  d.setDate(d.getDate()+offset);
+  return new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
+};
+const esc = value => String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+async function callApi(action,params={}) {
+  const url = new URL(API_URL);
+  url.searchParams.set("action",action);
+  Object.entries(params).forEach(([key,value])=>{if(value!==""&&value!=null)url.searchParams.set(key,value)});
+  const response = await fetch(url,{headers:{Accept:"application/json"}});
+  const data = await response.json().catch(()=>({}));
+  if(!response.ok) throw Error(data.error||"Falha ao consultar dados esportivos.");
+  return data;
+}
+
+function belongsToRegion(match) {
+  const league = match.league||{};
+  const country = league.country||"";
+  const id = Number(league.id);
+  if(region==="all") return true;
+  if(region==="brazil") return country==="Brazil";
+  if(region==="south-america") return southAmericanCountries.has(country);
+  if(region==="europe") return europeanCountries.has(country)||europeanCompetitionIds.has(id)||["Europe","UEFA"].includes(country);
+  return true;
+}
+
+function getVisibleItems() {
+  return currentItems.filter(match=>{
+    if(!belongsToRegion(match)) return false;
+    if(selectedLeague!=="all"&&String(match.league?.id)!==selectedLeague) return false;
+    if(query) {
+      const text = [match.league?.name,match.league?.country,match.teams?.home?.name,match.teams?.away?.name].join(" ").toLocaleLowerCase("pt-BR");
+      if(!text.includes(query)) return false;
+    }
+    return true;
+  });
+}
+
+function renderLeagueChips(items) {
+  const unique = new Map();
+  items.forEach(match=>{if(match.league?.id!=null)unique.set(String(match.league.id),match.league.name||"Competição")});
+  const competitions = [...unique.entries()].sort((a,b)=>a[1].localeCompare(b[1],"pt-BR"));
+  leagueChips.innerHTML = competitions.length
+    ? '<button class="league-chip '+(selectedLeague==="all"?"active":"")+'" data-league="all">Todas as competições</button>'+competitions.map(([id,name])=>'<button class="league-chip '+(selectedLeague===id?"active":"")+'" data-league="'+esc(id)+'">'+esc(name)+'</button>').join("")
+    : "";
+  leagueChips.querySelectorAll("[data-league]").forEach(button=>button.addEventListener("click",()=>{
+    selectedLeague=button.dataset.league;
+    renderLeagueChips(items);
+    showMatches(getVisibleItems());
+  }));
+}
+
+function showMatches(items) {
+  if(!items.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-ball">⚽</div><h3>Nenhuma partida encontrada</h3><p>Não há jogos para esta região, competição ou data na cobertura atual do fornecedor. Experimente outra data ou região.</p></div>';
+    return;
+  }
+  list.innerHTML = items.map(match=>{
+    const fixture=match.fixture||{},teams=match.teams||{},goals=match.goals||{},league=match.league||{},status=fixture.status||{};
+    const live=["1H","HT","2H","ET","P","LIVE","BT"].includes(status.short);
+    const score=goals.home==null&&goals.away==null?"–":(goals.home??0)+" : "+(goals.away??0);
+    const time=status.elapsed!=null?status.elapsed+"'":new Intl.DateTimeFormat("pt-BR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"}).format(new Date(fixture.date));
+    return '<article class="match-card"><div class="match-league">'+esc(league.name)+' <span>'+esc(league.country||"")+'</span></div><div class="match-main"><div class="match-team home"><img src="'+esc(teams.home?.logo||"")+'" alt="" onerror="this.style.display=\'none\'"><b>'+esc(teams.home?.name)+'</b></div><div class="match-score"><strong>'+esc(score)+'</strong><small class="'+(live?"live-label":"")+'">'+(live?"AO VIVO":esc(status.long||time))+'</small></div><div class="match-team away"><img src="'+esc(teams.away?.logo||"")+'" alt="" onerror="this.style.display=\'none\'"><b>'+esc(teams.away?.name)+'</b></div></div></article>';
+  }).join("");
+}
+
+function applyFilters() {
+  const visible=currentItems.filter(belongsToRegion);
+  if(selectedLeague!=="all"&&!visible.some(match=>String(match.league?.id)===selectedLeague)) selectedLeague="all";
+  renderLeagueChips(visible);
+  showMatches(getVisibleItems());
+}
+
+async function loadMatches(force=false) {
+  const offset=view==="tomorrow"?1:0;
+  const date=dateFor(offset);
+  const key=view+date;
+  if(!force&&cache[key]&&Date.now()-cache[key].time<120000) {
+    currentItems=cache[key].items;
+    applyFilters();
+    return;
+  }
+  list.innerHTML='<div class="loading-state"><span class="spinner"></span> Buscando partidas do mundo todo...</div>';
+  try {
+    const data=await callApi("fixtures",view==="live"?{live:"all"}:{date});
+    let items=data.response||[];
+    if(view==="live") items=items.filter(match=>["1H","HT","2H","ET","P","LIVE","BT"].includes(match.fixture?.status?.short));
+    cache[key]={time:Date.now(),items};
+    currentItems=items;
+    applyFilters();
+    statusText.textContent="Encontramos "+items.length+" partida(s) na consulta global • Atualizado às "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})+".";
+  } catch(error) {
+    list.innerHTML='<div class="empty-state"><div class="empty-ball">⚽</div><h3>Não foi possível carregar os jogos</h3><p>'+esc(error.message)+'</p></div>';
+  }
+}
+
+document.querySelectorAll("[data-filter]").forEach(button=>button.addEventListener("click",()=>{
+  document.querySelectorAll("[data-filter]").forEach(item=>item.classList.toggle("active",item===button));
+  region=button.dataset.filter;
+  selectedLeague="all";
+  applyFilters();
+}));
+document.querySelectorAll("[data-match-view]").forEach(button=>button.addEventListener("click",()=>{
+  document.querySelectorAll("[data-match-view]").forEach(item=>item.classList.toggle("active",item===button));
+  view=button.dataset.matchView;
+  loadMatches();
+}));
+searchInput.addEventListener("input",event=>{query=event.target.value.trim().toLocaleLowerCase("pt-BR");applyFilters()});
 document.getElementById("refreshMatches").addEventListener("click",()=>loadMatches(true));
-document.getElementById("loadStandings").addEventListener("click",async()=>{const league=document.getElementById("leagueId").value,season=document.getElementById("seasonYear").value,p=document.getElementById("standingsPanel");if(!league||!season){p.textContent="Informe o ID da liga e a temporada.";return}p.innerHTML='<span class="spinner"></span><div>Carregando classificação...</div>';try{const j=await callApi("standings",{league,season}),rows=(j.response?.[0]?.league?.standings||[]).flat();if(!rows.length){p.textContent="Classificação indisponível para esta competição/temporada.";return}p.className="standings-table-wrap";p.innerHTML='<table class="standings-table"><thead><tr><th>#</th><th>Clube</th><th>J</th><th>SG</th><th>Pts</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+esc(r.rank)+'</td><td class="club-cell"><img src="'+esc(r.team?.logo||"")+'" alt=""><b>'+esc(r.team?.name)+'</b></td><td>'+esc(r.all?.played)+'</td><td>'+esc(r.goalsDiff)+'</td><td><b>'+esc(r.points)+'</b></td></tr>').join("")+'</tbody></table>'}catch(e){p.textContent=e.message}});
+
+document.getElementById("loadStandings").addEventListener("click",async()=>{
+  const league=document.getElementById("leagueId").value;
+  const season=document.getElementById("seasonYear").value;
+  const panel=document.getElementById("standingsPanel");
+  if(!league||!season){panel.textContent="Informe o ID da liga e a temporada.";return}
+  panel.innerHTML='<span class="spinner"></span><div>Carregando classificação...</div>';
+  try {
+    const data=await callApi("standings",{league,season});
+    const rows=(data.response?.[0]?.league?.standings||[]).flat();
+    if(!rows.length){panel.textContent="Classificação indisponível para esta competição/temporada.";return}
+    panel.className="standings-table-wrap";
+    panel.innerHTML='<table class="standings-table"><thead><tr><th>#</th><th>Clube</th><th>J</th><th>SG</th><th>Pts</th></tr></thead><tbody>'+rows.map(row=>'<tr><td>'+esc(row.rank)+'</td><td class="club-cell"><img src="'+esc(row.team?.logo||"")+'" alt=""><b>'+esc(row.team?.name)+'</b></td><td>'+esc(row.all?.played)+'</td><td>'+esc(row.goalsDiff)+'</td><td><b>'+esc(row.points)+'</b></td></tr>').join("")+'</tbody></table>';
+  } catch(error) {panel.textContent=error.message}
+});
+
+loadMatches();
