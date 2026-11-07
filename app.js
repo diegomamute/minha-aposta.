@@ -1,4 +1,4 @@
-const API_URL = ""; // URL da Edge Function exclusiva da Minha Aposta.
+const API_URL = "https://wjebszolbtlxvoxndoke.supabase.co/functions/v1/football-data"; // URL da Edge Function exclusiva da Minha Aposta.
 const today=document.getElementById("today"), now=new Date();
 today.textContent=new Intl.DateTimeFormat("pt-BR",{weekday:"short",day:"2-digit",month:"short",year:"numeric"}).format(now).toUpperCase();
 document.getElementById("year").textContent=now.getFullYear();
