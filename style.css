@@ -5,3 +5,58 @@
 
 .league-chips{display:flex;gap:7px;overflow-x:auto;padding:2px 0 13px;margin-top:-4px;scrollbar-width:thin}.league-chip{white-space:nowrap;border:1px solid var(--line);background:#0b1928;color:#91a2b7;border-radius:20px;padding:7px 11px;font:600 9px "DM Sans";cursor:pointer}.league-chip.active,.league-chip:hover{border-color:#b7f34a80;background:#b7f34a14;color:var(--green)}.match-card{transition:border-color .18s,transform .18s}.match-card:hover{border-color:#b7f34a55;transform:translateY(-1px)}.filter,.match-tab,.refresh-button,.league-chip{transition:background .18s,border-color .18s,color .18s}
 @media(max-width:720px){.league-chips{margin-top:-2px;padding-bottom:12px}.league-chip{font-size:9px;padding:8px 12px}.filter{padding:9px 12px}}
+
+
+/* Central de partidas — layout editorial e escudos oficiais */
+.match-list{display:flex;flex-direction:column;gap:18px}
+.match-day-heading{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid #b7f34a30;border-radius:13px;background:linear-gradient(105deg,#132b36,#0d1b2c 70%);margin-bottom:1px}
+.day-heading-icon{width:38px;height:38px;border-radius:11px;background:#b7f34a18;color:var(--green);display:grid;place-items:center;font-size:17px}
+.match-day-heading>div{display:flex;flex-direction:column;gap:3px}
+.match-day-heading>div b{font:800 12px Outfit;letter-spacing:1px}
+.match-day-heading>div small{font-size:9px;color:#91a2b7}
+.live-now-badge{margin-left:auto;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:20px;background:#ff51511a;color:#ff7777;font-size:8px;font-weight:900;letter-spacing:1px}
+.live-now-badge i,.live-pulse,.game-state.live i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff5d67;box-shadow:0 0 10px #ff5d67;animation:liveBlink 1.3s infinite}
+@keyframes liveBlink{50%{opacity:.35}}
+.league-match-group{overflow:hidden;border:1px solid #26384a;border-radius:14px;background:#0b1928;box-shadow:0 8px 22px #00000012}
+.league-group-head{display:flex;align-items:center;gap:11px;padding:13px 15px;background:linear-gradient(90deg,#12283a,#0e1d2e);border-bottom:1px solid #ffffff0d}
+.league-logo{width:31px;height:31px;object-fit:contain;flex:0 0 31px}
+.league-logo-fallback{width:31px;height:31px;display:grid;place-items:center;border-radius:9px;background:#ffffff0a;font-size:18px}
+.league-group-name{display:flex;flex-direction:column;gap:3px;min-width:0}
+.league-group-name b{font:700 11px Outfit;color:#dce8f4}
+.league-group-name small{font-size:9px;color:#8093a8}
+.league-game-count{margin-left:auto;color:#8295aa;font-size:8px;font-weight:800;letter-spacing:1px;white-space:nowrap}
+.league-group-games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:#ffffff0a}
+.match-card{border:0;border-radius:0;background:#0d1b2c;padding:13px 14px;min-width:0}
+.match-card:hover{transform:none;background:#112238;border-color:transparent}
+.match-card.is-live{background:linear-gradient(110deg,#172535,#102238)}
+.match-kickoff{display:flex;align-items:center;gap:6px;color:#8396aa;font-size:8px;font-weight:800;letter-spacing:.8px;margin-bottom:10px}
+.match-kickoff span:last-child{margin-left:auto;color:#d9e5f0;font-size:10px;letter-spacing:0}
+.match-main{grid-template-columns:minmax(0,1fr) 62px minmax(0,1fr);gap:5px;padding-top:0}
+.match-team{gap:7px;font-size:10px;line-height:1.25}
+.match-team img{width:25px;height:25px;flex:0 0 25px}
+.match-team b{font-size:10px;font-weight:700}
+.match-score strong{font:800 19px Outfit;white-space:nowrap}
+.game-state{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:4px;font-size:7px;font-weight:900;letter-spacing:.6px;white-space:nowrap}
+.game-state.live{color:#ff747d}.game-state.finished{color:#a1b0c0}.game-state.scheduled{color:#8ea2b8}
+.match-tabs{padding:4px;border:1px solid #26384a;background:#0a1726;border-radius:10px}
+.match-tab{border:0;background:transparent;padding:10px 14px;border-radius:7px}
+.match-tab.active{background:var(--green);color:#13200b;box-shadow:0 4px 15px #b7f34a25}
+.refresh-button{border-radius:9px;padding:11px 15px;font-weight:800;box-shadow:0 4px 15px #b7f34a18}
+.filter{border-radius:9px;padding:10px 14px}
+.filter.active{box-shadow:0 4px 15px #b7f34a20}
+.search-wrap{border-radius:10px}
+@media(max-width:720px){
+ .league-group-games{grid-template-columns:1fr}
+ .match-card{padding:14px 13px}
+ .match-main{grid-template-columns:minmax(0,1fr) 66px minmax(0,1fr)}
+ .match-team{font-size:9px}
+ .match-team img{width:27px;height:27px;flex-basis:27px}
+ .match-team b{font-size:10px}
+ .match-day-heading{padding:12px}
+ .match-tabs{width:100%;display:grid;grid-template-columns:repeat(3,1fr)}
+ .match-tab{padding:10px 5px;font-size:9px}
+ .match-toolbar{gap:9px;align-items:stretch}
+ .refresh-button{white-space:nowrap}
+ .league-group-head{padding:12px}
+ .league-game-count{font-size:7px}
+}
